@@ -81,29 +81,36 @@ from io import BytesIO
 @app.post("/generar-pdf")
 def generar_pdf(data: dict):
 
-    buffer = BytesIO()
-    doc = SimpleDocTemplate(buffer)
-    elements = []
-    styles = getSampleStyleSheet()
+    try:
+        estudiante = str(data.get("estudiante", "No especificado"))
+        curso = str(data.get("curso", "No especificado"))
+        observaciones = str(data.get("observaciones", ""))
 
-    elements.append(Paragraph("ANÁLISIS DE PROYECTO DOCUMENTO DE GRADO", styles["Heading1"]))
-    elements.append(Spacer(1, 0.5 * inch))
+        buffer = BytesIO()
+        doc = SimpleDocTemplate(buffer)
+        elements = []
+        styles = getSampleStyleSheet()
 
-    elements.append(Paragraph(f"Estudiante: {data.get('estudiante')}", styles["Normal"]))
-    elements.append(Paragraph(f"Curso: {data.get('curso')}", styles["Normal"]))
-    elements.append(Spacer(1, 0.3 * inch))
+        elements.append(Paragraph("ANÁLISIS DE PROYECTO DOCUMENTO DE GRADO", styles["Heading1"]))
+        elements.append(Spacer(1, 0.5 * inch))
 
-    elements.append(Paragraph("Observaciones:", styles["Heading2"]))
-    elements.append(Paragraph(data.get("observaciones") or "", styles["Normal"]))
+        elements.append(Paragraph(f"Estudiante: {estudiante}", styles["Normal"]))
+        elements.append(Paragraph(f"Curso: {curso}", styles["Normal"]))
+        elements.append(Spacer(1, 0.3 * inch))
 
-    doc.build(elements)
+        elements.append(Paragraph("Observaciones:", styles["Heading2"]))
+        elements.append(Paragraph(observaciones, styles["Normal"]))
 
-    buffer.seek(0)
+        doc.build(elements)
+        buffer.seek(0)
 
-    return StreamingResponse(
-        buffer,
-        media_type="application/pdf",
-        headers={
-            "Content-Disposition": "attachment; filename=analisis.pdf"
-        }
-    )
+        return StreamingResponse(
+            buffer,
+            media_type="application/pdf",
+            headers={
+                "Content-Disposition": "attachment; filename=analisis.pdf"
+            }
+        )
+
+    except Exception as e:
+        return {"error": str(e)}
