@@ -72,12 +72,11 @@ def guardar_reporte(data: dict):
 
     return {"status": "Reporte completo guardado correctamente"}
 
-from fastapi.responses import JSONResponse
+from fastapi.responses import StreamingResponse
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer
 from reportlab.lib.styles import getSampleStyleSheet
 from reportlab.lib.units import inch
 from io import BytesIO
-import base64
 
 @app.post("/generar-pdf")
 def generar_pdf(data: dict):
@@ -102,11 +101,12 @@ def generar_pdf(data: dict):
     elements.append(Paragraph(observaciones, styles["Normal"]))
 
     doc.build(elements)
+    buffer.seek(0)
 
-    pdf_bytes = buffer.getvalue()
-    pdf_base64 = base64.b64encode(pdf_bytes).decode("utf-8")
-
-    return JSONResponse({
-        "file_name": "analisis.pdf",
-        "file_base64": pdf_base64
-    })
+    return StreamingResponse(
+        buffer,
+        media_type="application/pdf",
+        headers={
+            "Content-Disposition": "attachment; filename=analisis.pdf"
+        }
+    )
