@@ -72,18 +72,17 @@ def guardar_reporte(data: dict):
 
     return {"status": "Reporte completo guardado correctamente"}
 
-from fastapi.responses import FileResponse
+from fastapi.responses import StreamingResponse
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer
 from reportlab.lib.styles import getSampleStyleSheet
 from reportlab.lib.units import inch
-import uuid
+from io import BytesIO
 
 @app.post("/generar-pdf")
 def generar_pdf(data: dict):
 
-    file_name = f"analisis_{uuid.uuid4()}.pdf"
-
-    doc = SimpleDocTemplate(file_name)
+    buffer = BytesIO()
+    doc = SimpleDocTemplate(buffer)
     elements = []
     styles = getSampleStyleSheet()
 
@@ -95,12 +94,16 @@ def generar_pdf(data: dict):
     elements.append(Spacer(1, 0.3 * inch))
 
     elements.append(Paragraph("Observaciones:", styles["Heading2"]))
-    elements.append(Paragraph(data.get("observaciones"), styles["Normal"]))
+    elements.append(Paragraph(data.get("observaciones") or "", styles["Normal"]))
 
     doc.build(elements)
 
-    return FileResponse(
-        path=file_name,
-        filename=file_name,
-        media_type='application/pdf'
+    buffer.seek(0)
+
+    return StreamingResponse(
+        buffer,
+        media_type="application/pdf",
+        headers={
+            "Content-Disposition": "attachment; filename=analisis.pdf"
+        }
     )
