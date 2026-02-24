@@ -72,45 +72,41 @@ def guardar_reporte(data: dict):
 
     return {"status": "Reporte completo guardado correctamente"}
 
-from fastapi.responses import StreamingResponse
+from fastapi.responses import JSONResponse
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer
 from reportlab.lib.styles import getSampleStyleSheet
 from reportlab.lib.units import inch
 from io import BytesIO
+import base64
 
 @app.post("/generar-pdf")
 def generar_pdf(data: dict):
 
-    try:
-        estudiante = str(data.get("estudiante", "No especificado"))
-        curso = str(data.get("curso", "No especificado"))
-        observaciones = str(data.get("observaciones", ""))
+    estudiante = str(data.get("estudiante", "No especificado"))
+    curso = str(data.get("curso", "No especificado"))
+    observaciones = str(data.get("observaciones", ""))
 
-        buffer = BytesIO()
-        doc = SimpleDocTemplate(buffer)
-        elements = []
-        styles = getSampleStyleSheet()
+    buffer = BytesIO()
+    doc = SimpleDocTemplate(buffer)
+    elements = []
+    styles = getSampleStyleSheet()
 
-        elements.append(Paragraph("ANÁLISIS DE PROYECTO DOCUMENTO DE GRADO", styles["Heading1"]))
-        elements.append(Spacer(1, 0.5 * inch))
+    elements.append(Paragraph("ANÁLISIS DE PROYECTO DOCUMENTO DE GRADO", styles["Heading1"]))
+    elements.append(Spacer(1, 0.5 * inch))
 
-        elements.append(Paragraph(f"Estudiante: {estudiante}", styles["Normal"]))
-        elements.append(Paragraph(f"Curso: {curso}", styles["Normal"]))
-        elements.append(Spacer(1, 0.3 * inch))
+    elements.append(Paragraph(f"Estudiante: {estudiante}", styles["Normal"]))
+    elements.append(Paragraph(f"Curso: {curso}", styles["Normal"]))
+    elements.append(Spacer(1, 0.3 * inch))
 
-        elements.append(Paragraph("Observaciones:", styles["Heading2"]))
-        elements.append(Paragraph(observaciones, styles["Normal"]))
+    elements.append(Paragraph("Observaciones:", styles["Heading2"]))
+    elements.append(Paragraph(observaciones, styles["Normal"]))
 
-        doc.build(elements)
-        buffer.seek(0)
+    doc.build(elements)
 
-        return StreamingResponse(
-            buffer,
-            media_type="application/pdf",
-            headers={
-                "Content-Disposition": "attachment; filename=analisis.pdf"
-            }
-        )
+    pdf_bytes = buffer.getvalue()
+    pdf_base64 = base64.b64encode(pdf_bytes).decode("utf-8")
 
-    except Exception as e:
-        return {"error": str(e)}
+    return JSONResponse({
+        "file_name": "analisis.pdf",
+        "file_base64": pdf_base64
+    })
