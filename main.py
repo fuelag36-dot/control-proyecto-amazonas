@@ -23,14 +23,51 @@ def guardar_reporte(data: dict):
 
     fecha = datetime.now().strftime("%d/%m/%Y")
 
+    # -------- HOJA 1: REPORTE INDIVIDUAL --------
     hoja1 = sheet.worksheet("REPORTE INDIVIDUAL")
     hoja1.append_row([
         fecha,
-        data["estudiante"],
-        data["curso"],
-        data["tipo_documento"],
-        data["cumple_estructura"],
-        data["observaciones"]
+        data.get("estudiante"),
+        data.get("curso"),
+        data.get("tipo_documento"),
+        data.get("cumple_estructura"),
+        data.get("observaciones")
     ])
 
-    return {"status": "Reporte guardado correctamente"}
+    # -------- HOJA 2: DETALLE ESTRUCTURA --------
+    hoja2 = sheet.worksheet("DETALLE ESTRUCTURA")
+    hoja2.append_row([
+        data.get("estudiante"),
+        data.get("introduccion_ok"),
+        data.get("antecedentes_ok"),
+        data.get("problema_ok"),
+        data.get("justificacion_ok"),
+        data.get("objetivos_ok"),
+        data.get("marco_conceptual_ok"),
+        data.get("marco_metodologico_ok"),
+        data.get("resultados_ok"),
+        data.get("analisis_ok"),
+        data.get("conclusiones_ok"),
+        data.get("recomendaciones_ok"),
+        data.get("referencias_ok"),
+        data.get("anexos_ok")
+    ])
+
+    # -------- HOJA 3: CONTROL PALABRAS --------
+    hoja3 = sheet.worksheet("CONTROL PALABRAS")
+    hoja3.append_row([
+        data.get("estudiante"),
+        data.get("palabras_intro"),
+        data.get("palabras_anteced"),
+        data.get("palabras_problema"),
+        data.get("palabras_justif"),
+        data.get("palabras_obj"),
+        data.get("palabras_marco_c"),
+        data.get("palabras_marco_m"),
+        data.get("palabras_result"),
+        data.get("palabras_analisis"),
+        data.get("palabras_concl"),
+        data.get("palabras_recom")
+    ])
+
+    return {"status": "Reporte completo guardado correctamente"}
