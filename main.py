@@ -5,6 +5,12 @@ from datetime import datetime
 import os
 import json
 
+from fastapi.responses import StreamingResponse
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer
+from reportlab.lib.styles import getSampleStyleSheet
+from reportlab.lib.units import inch
+from io import BytesIO
+
 app = FastAPI()
 
 SHEET_ID = "1MJ-zBEaLm-TbRjZlKw_8MdfhWGshfQ4gfxIke6Wbw88"
@@ -18,6 +24,10 @@ credentials = Credentials.from_service_account_info(creds_dict, scopes=scopes)
 client = gspread.authorize(credentials)
 sheet = client.open_by_key(SHEET_ID)
 
+
+# ===============================
+# GUARDAR REPORTE EN GOOGLE SHEETS
+# ===============================
 @app.post("/guardar-reporte")
 def guardar_reporte(data: dict):
 
@@ -72,12 +82,10 @@ def guardar_reporte(data: dict):
 
     return {"status": "Reporte completo guardado correctamente"}
 
-from fastapi.responses import StreamingResponse
-from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer
-from reportlab.lib.styles import getSampleStyleSheet
-from reportlab.lib.units import inch
-from io import BytesIO
 
+# ===============================
+# GENERAR PDF DESCARGABLE
+# ===============================
 @app.post("/generar-pdf")
 def generar_pdf(data: dict):
 
@@ -86,6 +94,7 @@ def generar_pdf(data: dict):
     observaciones = str(data.get("observaciones", ""))
 
     buffer = BytesIO()
+
     doc = SimpleDocTemplate(buffer)
     elements = []
     styles = getSampleStyleSheet()
