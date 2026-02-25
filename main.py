@@ -4,44 +4,26 @@ from google.oauth2.service_account import Credentials
 from datetime import datetime
 import os
 import json
-import uuid
-
-from fastapi.responses import JSONResponse
-from fastapi.staticfiles import StaticFiles
-from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer
-from reportlab.lib.styles import getSampleStyleSheet
-from reportlab.lib.units import inch
 
 app = FastAPI()
 
-# ===============================
-# CREAR CARPETA TEMP SI NO EXISTE
-# ===============================
-if not os.path.exists("temp"):
-    os.makedirs("temp")
-
-app.mount("/temp", StaticFiles(directory="temp"), name="temp")
-
-# ===============================
-# CONFIGURACIÓN GOOGLE SHEETS
-# ===============================
 SHEET_ID = "1MJ-zBEaLm-TbRjZlKw_8MdfhWGshfQ4gfxIke6Wbw88"
+
 scopes = ["https://www.googleapis.com/auth/spreadsheets"]
 
+# 🔐 Cargar credenciales desde variable de entorno (Render)
 creds_dict = json.loads(os.environ["GOOGLE_CREDS"])
 credentials = Credentials.from_service_account_info(creds_dict, scopes=scopes)
 
 client = gspread.authorize(credentials)
 sheet = client.open_by_key(SHEET_ID)
 
-# ===============================
-# GUARDAR REPORTE EN GOOGLE SHEETS
-# ===============================
 @app.post("/guardar-reporte")
 def guardar_reporte(data: dict):
 
     fecha = datetime.now().strftime("%d/%m/%Y")
 
+    # -------- HOJA 1: REPORTE INDIVIDUAL --------
     hoja1 = sheet.worksheet("REPORTE INDIVIDUAL")
     hoja1.append_row([
         fecha,
@@ -52,6 +34,7 @@ def guardar_reporte(data: dict):
         data.get("observaciones")
     ])
 
+    # -------- HOJA 2: DETALLE ESTRUCTURA --------
     hoja2 = sheet.worksheet("DETALLE ESTRUCTURA")
     hoja2.append_row([
         data.get("estudiante"),
@@ -70,6 +53,7 @@ def guardar_reporte(data: dict):
         data.get("anexos_ok")
     ])
 
+    # -------- HOJA 3: CONTROL PALABRAS --------
     hoja3 = sheet.worksheet("CONTROL PALABRAS")
     hoja3.append_row([
         data.get("estudiante"),
