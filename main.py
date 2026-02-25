@@ -4,14 +4,18 @@ from google.oauth2.service_account import Credentials
 from datetime import datetime
 import os
 import json
+import uuid
 
-from fastapi.responses import StreamingResponse
+from fastapi.responses import JSONResponse
+from fastapi.staticfiles import StaticFiles
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer
 from reportlab.lib.styles import getSampleStyleSheet
 from reportlab.lib.units import inch
-from io import BytesIO
 
 app = FastAPI()
+
+# 👉 Permitir servir archivos desde carpeta temp
+app.mount("/temp", StaticFiles(directory="temp"), name="temp")
 
 SHEET_ID = "1MJ-zBEaLm-TbRjZlKw_8MdfhWGshfQ4gfxIke6Wbw88"
 
@@ -33,7 +37,6 @@ def guardar_reporte(data: dict):
 
     fecha = datetime.now().strftime("%d/%m/%Y")
 
-    # -------- HOJA 1: REPORTE INDIVIDUAL --------
     hoja1 = sheet.worksheet("REPORTE INDIVIDUAL")
     hoja1.append_row([
         fecha,
@@ -44,7 +47,6 @@ def guardar_reporte(data: dict):
         data.get("observaciones")
     ])
 
-    # -------- HOJA 2: DETALLE ESTRUCTURA --------
     hoja2 = sheet.worksheet("DETALLE ESTRUCTURA")
     hoja2.append_row([
         data.get("estudiante"),
@@ -63,7 +65,6 @@ def guardar_reporte(data: dict):
         data.get("anexos_ok")
     ])
 
-    # -------- HOJA 3: CONTROL PALABRAS --------
     hoja3 = sheet.worksheet("CONTROL PALABRAS")
     hoja3.append_row([
         data.get("estudiante"),
@@ -84,7 +85,7 @@ def guardar_reporte(data: dict):
 
 
 # ===============================
-# GENERAR PDF DESCARGABLE
+# GENERAR PDF CON LINK ESTABLE
 # ===============================
 @app.post("/generar-pdf")
 def generar_pdf(data: dict):
@@ -93,9 +94,12 @@ def generar_pdf(data: dict):
     curso = str(data.get("curso", "No especificado"))
     observaciones = str(data.get("observaciones", ""))
 
-    buffer = BytesIO()
+    # Generar nombre único
+    file_id = str(uuid.uuid4())
+    file_name = f"{file_id}.pdf"
+    file_path = os.path.join("temp", file_name)
 
-    doc = SimpleDocTemplate(buffer)
+    doc = SimpleDocTemplate(file_path)
     elements = []
     styles = getSampleStyleSheet()
 
@@ -110,12 +114,9 @@ def generar_pdf(data: dict):
     elements.append(Paragraph(observaciones, styles["Normal"]))
 
     doc.build(elements)
-    buffer.seek(0)
 
-    return StreamingResponse(
-        buffer,
-        media_type="application/pdf",
-        headers={
-            "Content-Disposition": "attachment; filename=analisis.pdf"
-        }
-    )
+    download_url = f"https://control-proyecto-amazonas.onrender.com/temp/{file_name}"
+
+    return JSONResponse({
+        "download_url": download_url
+    })
