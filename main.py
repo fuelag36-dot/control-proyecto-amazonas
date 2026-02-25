@@ -14,7 +14,12 @@ from reportlab.lib.units import inch
 
 app = FastAPI()
 
-# 👉 Permitir servir archivos desde carpeta temp
+from fastapi.staticfiles import StaticFiles
+
+# Crear carpeta temp si no existe
+if not os.path.exists("temp"):
+    os.makedirs("temp")
+
 app.mount("/temp", StaticFiles(directory="temp"), name="temp")
 
 SHEET_ID = "1MJ-zBEaLm-TbRjZlKw_8MdfhWGshfQ4gfxIke6Wbw88"
