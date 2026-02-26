@@ -6,7 +6,10 @@ import os
 import json
 
 app = FastAPI()
-
+@app.get("/health")
+def health():
+    return {"ok": True}
+    
 SHEET_ID = "1MJ-zBEaLm-TbRjZlKw_8MdfhWGshfQ4gfxIke6Wbw88"
 
 scopes = ["https://www.googleapis.com/auth/spreadsheets"]
