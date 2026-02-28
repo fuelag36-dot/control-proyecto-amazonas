@@ -6,6 +6,9 @@ import os
 import json
 
 app = FastAPI()
+@app.get("/")
+def home():
+    return {"status": "API control-proyecto-amazonas activa"}
 @app.get("/health")
 def health():
     return {"ok": True}
